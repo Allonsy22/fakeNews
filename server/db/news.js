@@ -8,6 +8,7 @@ const schema = Joi.object().keys({
     body: Joi.string().required(),
     likes: Joi.number(),
     comments: Joi.array(),
+    nickname: Joi.string().required(),
     imageURL: Joi.string().uri({
         scheme: [
             /https?/
@@ -15,11 +16,13 @@ const schema = Joi.object().keys({
     }),
 })
 
-function getAll() {
+function getNews() {
     return news.find();
 }
 
 function create(novelty) {
+    novelty.likes = 0;
+    novelty.comments = [];
     const result = Joi.validate( novelty, schema );
     if ( result.error == null ) {
         let date = new Date(),
@@ -60,7 +63,7 @@ function updateNoveltyComments(obj) {
 }
 
 module.exports = {
-    getAll,
+    getNews,
     create,
     deleteNews,
     updateNoveltyLikes,

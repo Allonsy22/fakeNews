@@ -8,6 +8,7 @@
               <v-pagination
                 v-model="page"
                 :length="pagesCount"
+                @input="setCurrentPage"
               ></v-pagination>
             </v-card-text>
           </v-card>
@@ -29,8 +30,16 @@ export default {
     },
     computed: {
       ...mapGetters([
-        'pagesCount'
+        'pagesCount',
+        'currentPage'
       ])
+    },
+    methods: {
+      setCurrentPage() {
+        this.$store.dispatch("setCurrentPage", this.page).then( () => {
+          this.$vuetify.goTo(0);
+        }).catch(e => console.log(e));
+      }
     },
 }
 </script>

@@ -1,7 +1,7 @@
 const axios = require('axios');
 
 const API_URL = "https://app-fake-news.herokuapp.com/user";
-const API_URL_ACTION = "https://app-fake-news.herokuapp.com/user/action";
+const API_URL_ACTION = API_URL + "/action";
 
 const state = {
     user: []
@@ -20,7 +20,7 @@ const actions = {
         });
     },
     updateUserInfo( {commit}, obj ) {
-        axios.post(API_URL_ACTION, obj).then( response => {
+        return axios.post(API_URL_ACTION, obj).then( response => {
             //
         });
     }

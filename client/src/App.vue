@@ -11,16 +11,26 @@ export default {
   components: {
 
   },
-  data () {
-    return {
-      //
-    }
-  },
   created() {
-    let obj = {
-      "id": localStorage.getItem('userId'),
-    };
-    this.$store.dispatch('getUser', obj);
+    this.getUser().then( user => {
+      this.$store.dispatch('getUser', user);
+    }).catch(e => {
+      console.log(e);
+    });
+  },
+  methods: {
+    getUser() {
+      return new Promise((res, rej) => {
+        let obj = {
+          "id": localStorage.getItem('userId'),
+        };
+        if ( obj ) {
+          res(obj);
+        } else {
+          rej("User id does'n exist");
+        }
+      });
+    }
   },
 };
 </script>

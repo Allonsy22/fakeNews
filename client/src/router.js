@@ -19,6 +19,6 @@ export default new Router({
       name: 'details',
       props: true,
       component: NewsDetails
-    }
+    },
   ],
 });

@@ -2,6 +2,10 @@
     <v-container mt-3>
         <v-layout>
             <v-flex md8 sm8 xs8>
+                <v-text-field
+                    label="Nickname"
+                    v-model="nickname"
+                ></v-text-field>
                 <v-textarea
                     outline
                     v-model="comment"
@@ -11,7 +15,7 @@
             <v-flex >
                 <v-btn flat style="color: blue"
                         @click="addComment"
-                        v-if="comment.replace(/\s/g, '') != ''">
+                        :disabled="comment.replace(/\s/g, '') == ''">
                     <v-icon>send</v-icon>
                 </v-btn>
             </v-flex>
@@ -29,7 +33,7 @@
             </v-flex>
             
             <v-flex md11 sm10 xs10>
-                <div>{{ comments[n - 1].comment }}</div>
+                <div class="comments">{{ comments[n - 1].comment }}</div>
             </v-flex>
             <hr class="hr">
         </v-layout>
@@ -44,6 +48,7 @@ export default {
     data() {
         return {
             comment: "",
+            nickname: "",
             postId: location.pathname.slice(6),
         }
     },
@@ -52,10 +57,11 @@ export default {
             "userName",
             "newsComments",
             "newsData"
-            
         ]),
         comments() {
-            return this.newsData.filter( item => item._id == this.postId)[0].comments;
+            return this.newsData.filter( item => {
+                return item._id == this.postId
+            })[0].comments.reverse();
         },
     },
     methods: {
@@ -64,22 +70,31 @@ export default {
       },
         addComment() {
         let postId = this.postId;
-        let userId = localStorage.getItem("userId");
         
-        if ( userId ) {
+        if ( this.nickname.trim().length > 0 ) {
             let obj = {
                 "postId": postId,
                 "value": {
-                    "userId": userId,
-                    "userName": this.userName,
+                    "userName": this.nickname,
                     "comment": this.comment
                 }
             }
             this.$store.dispatch("addComments", obj).then( () => {
                 this.getNewsData();
             });
+            this.comment = "";
         } else {
-            this.comment = "Please Log In";
+            let obj = {
+                "postId": postId,
+                "value": {
+                    "userName": "No name",
+                    "comment": this.comment
+                }
+            }
+            this.$store.dispatch("addComments", obj).then( () => {
+                this.getNewsData();
+            });
+            this.comment = "";
         }
       },
     },
@@ -89,6 +104,12 @@ export default {
 <style scoped>
 .hr {
     border-width: 2px;
+}
+
+.comments {
+    width: 100%;
+    word-break: break-all; 
+    word-wrap: break-word;
 }
 </style>
 

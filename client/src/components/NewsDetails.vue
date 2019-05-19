@@ -5,22 +5,19 @@
         <v-container v-if="newsData.length">
         <v-img
             :src="novelty.imageURL"
-            aspect-ratio="2">
+            aspect-ratio="2"
+            lazy-src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRw5WrlkUQT9BMeXPL4NVAwuD1n9hqczs__ff8Uv8XJnPfau98e">
         </v-img>
 
-        <div class="mt-3">
+        <div>
             <h2 class="display-3">{{ novelty.title }}</h2>
-            <div v-html="novelty.body"></div>
+            <div v-html="novelty.body"
+                style="word-break: break-all;"></div>
+            <span class="date mr-2 blue--text" >{{ novelty.nickname }}</span>
             <span class="date" >{{ novelty.created }}</span>
         </div>
 
         <div class="text-md-right text-sm-right text-xs-center">
-            <v-btn flat
-                   @click="addLikes($event)"
-                   :disabled="isDisabled">
-                <v-icon class="red--text text--lighten-3">favorite</v-icon>
-                <span>{{ novelty.likes }}</span>
-            </v-btn>
             <v-btn flat
                    @click="showComments">
                 <v-icon>mode_comment</v-icon>
@@ -56,7 +53,7 @@ export default {
         return {
             isVisible: false,
             postId: location.pathname.slice(6),
-            isDisabled: false
+            likes: 0
         }
     },
     created() {
@@ -70,7 +67,10 @@ export default {
         ]),
         novelty() {
             return this.newsData.filter( item => item._id == this.postId)[0];
-        }
+        },
+        noveltyLikes() {
+          return this.likes || this.novelty.likes;
+        },
     },
     methods: {
       getNewsData() {
@@ -80,7 +80,6 @@ export default {
           this.isVisible = !this.isVisible;
       },
       addLikes() {
-        this.isDisabled = true;
         let postId = this.postId;
         let userId = localStorage.getItem("userId");
         let isPostAlreadyExist = this.likedPost.filter( item => item["postId"] == postId);
@@ -88,27 +87,40 @@ export default {
         if ( userId ) {
           
           if ( isPostAlreadyExist.length ) {
-            this.updateUserInfo("like", "pull", postId );
-            this.updateNewsInfo(postId, "likes", -1);
+            this.likes = this.novelty.likes - 1;
+            this.updateUserInfo("like", "pull", postId ).then(() => {
+              this.updateNewsInfo(postId, "likes", -1);
+            }).catch(e => {
+              console.log(e);
+            });
           } else {
-            this.updateUserInfo("like", "push", postId );
-            this.updateNewsInfo(postId, "likes", 1);
+            this.likes = this.novelty.likes + 1;
+            this.updateUserInfo("like", "push", postId ).then(() => {
+              this.updateNewsInfo(postId, "likes", 1);
+            }).catch(e => {
+              console.log(e);
+            });
           }
         }
-        setTimeout(() => {
-          this.isDisabled = false;
-        }, 1500);
       },
       updateUserInfo(action, method, postId) {
-        let userId = localStorage.getItem("userId");
-        let userInfo = {
-            "id": userId,
-            "action": action,
-            "method": method,
-            "value": {"postId": postId}
-          }
-        this.$store.dispatch("updateUserInfo", userInfo );
-        this.$store.dispatch("getUser", {"id": userId});
+        return new Promise( (res, rej) => {
+            let userId = localStorage.getItem("userId");
+            if ( userId ) {
+              let userInfo = {
+                  "id": userId,
+                  "action": action,
+                  "method": method,
+                  "value": {"postId": postId}
+                }
+              this.$store.dispatch("updateUserInfo", userInfo ).then(() => {
+                this.$store.dispatch("getUser", {"id": userId});
+              });
+              res();
+            } else {
+              rej("User doesn't exist");
+            }            
+        });
       },
       updateNewsInfo(postId, key, step) {
         let noveltyObj = {
@@ -119,7 +131,7 @@ export default {
         this.$store.dispatch("addLikes", noveltyObj).then(() => {
           this.getNewsData();
         });
-      }
+      },
     },
 }
 </script>
